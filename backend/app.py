@@ -441,9 +441,10 @@ async def download_video(request: dict):
 
 
 # ============================================
-# ✂️ Video Processing Endpoint
+# ✂️ Video Processing Endpoint (alias /api/edit)
 # ============================================
 @app.post("/api/process")
+@app.post("/api/edit")  # Алиас для совместимости с фронтендом
 async def process_video_endpoint(request: dict):
     """Обработать видео (обрезка, эффекты, баннер)"""
     input_file = request.get("input_file") or request.get("input_filename")
@@ -577,7 +578,7 @@ async def upload_file(file: UploadFile = File(...)):
 
 
 # ============================================
-# 📺 TikTok Endpoints (заглушки)
+# 📺 TikTok Endpoints (заглушки + алиасы для совместимости)
 # ============================================
 @app.get("/api/tiktok/user")
 async def get_tiktok_user():
@@ -585,8 +586,17 @@ async def get_tiktok_user():
 
 
 @app.get("/api/tiktok/accounts")
+@app.get("/api/accounts")  # Алиас для совместимости с фронтендом
 async def get_tiktok_accounts():
-    return {"accounts": [], "count": 0}
+    """Получить список аккаунтов TikTok"""
+    # Заглушка - в будущем будет интеграция с реальным API TikTok
+    return {
+        "accounts": [
+            {"id": "1", "username": "@demo_account", "status": "active", "followers": 15000},
+            {"id": "2", "username": "@test_user", "status": "pending", "followers": 500}
+        ],
+        "count": 2
+    }
 
 
 @app.get("/api/tiktok/videos")
@@ -607,6 +617,12 @@ async def tiktok_logout():
 @app.delete("/api/tiktok/account/{account_id}")
 async def delete_tiktok_account(account_id: str):
     return {"status": "success"}
+
+
+@app.post("/api/accounts/{account_id}/refresh")
+async def refresh_account(account_id: str):
+    """Обновить статус аккаунта"""
+    return {"status": "success", "message": f"Account {account_id} refreshed"}
 
 
 # ============================================
