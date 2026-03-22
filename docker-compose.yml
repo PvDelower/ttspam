@@ -34,9 +34,6 @@ services:
       - "3000:3000"
     environment:
       - REACT_APP_API_URL=http://localhost:8000
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     networks:
       - video-network
     restart: unless-stopped
