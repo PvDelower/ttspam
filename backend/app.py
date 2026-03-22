@@ -398,11 +398,20 @@ async def download_video(request: dict):
         
         fmt = quality_format.get(quality, "bestvideo[height<=1080]+bestaudio/best")
         
+        # Конфигурация yt-dlp с обходом блокировок
         cmd = [
             "yt-dlp",
             "-f", fmt,
             "--merge-output-format", "mp4",
             "--no-warnings",
+            "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "--add-header", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "--add-header", "Accept-Language:en-us,en;q=0.5",
+            "--add-header", "Referer:https://www.youtube.com/",
+            "--cookies-from-browser", "chrome",
+            "--extractor-retries", "3",
+            "--retry-sleep", "2",
+            "--socket-timeout", "30",
             "-o", str(DOWNLOADS_DIR / "%(title)s.%(ext)s"),
             youtube_url,
         ]
@@ -412,8 +421,23 @@ async def download_video(request: dict):
         
         if result.returncode != 0:
             error_msg = result.stderr or result.stdout
-            logger.error(f"Download error: {error_msg}")
-            raise Exception(f"Download failed: {error_msg}")
+            # Пробуем альтернативный формат если первый не сработал
+            if "403" in error_msg or "HTTP Error" in error_msg:
+                logger.warning("⚠️ HTTP 403 detected, trying alternative format...")
+                alt_cmd = cmd.copy()
+                # Заменяем формат на более простой
+                alt_cmd[alt_cmd.index("-f") + 1] = "best[height<=720]/best"
+                # Убираем cookies-from-browser если он вызывает проблемы
+                if "--cookies-from-browser" in alt_cmd:
+                    idx = alt_cmd.index("--cookies-from-browser")
+                    alt_cmd.pop(idx)
+                    alt_cmd.pop(idx)  # удаляем значение тоже
+                result = subprocess.run(alt_cmd, capture_output=True, text=True, timeout=300)
+            
+            if result.returncode != 0:
+                error_msg = result.stderr or result.stdout
+                logger.error(f"Download error: {error_msg}")
+                raise Exception(f"Download failed: {error_msg}")
         
         # Находим скачанный файл
         files = [f for f in DOWNLOADS_DIR.glob("*") 
