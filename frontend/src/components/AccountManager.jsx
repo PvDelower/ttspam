@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 function AccountManager() {
   const [accounts, setAccounts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -11,7 +13,7 @@ function AccountManager() {
 
   const fetchAccounts = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/accounts')
+      const response = await fetch(`${API_URL}/api/accounts`)
       const data = await response.json()
       
       if (response.ok) {
@@ -20,7 +22,8 @@ function AccountManager() {
         setMessage(`❌ Ошибка загрузки: ${data.error}`)
       }
     } catch (error) {
-      setMessage(`❌ Ошибка соединения: ${error.message}`)
+      setMessage(`❌ Ошибка соединения: Проверьте подключение к серверу (${API_URL})`)
+      console.error('Fetch accounts error:', error)
     } finally {
       setLoading(false)
     }
@@ -28,7 +31,7 @@ function AccountManager() {
 
   const refreshStatus = async (accountId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/accounts/${accountId}/refresh`, {
+      const response = await fetch(`${API_URL}/api/accounts/${accountId}/refresh`, {
         method: 'POST'
       })
       
@@ -37,7 +40,8 @@ function AccountManager() {
         setMessage('✅ Статус обновлен')
       }
     } catch (error) {
-      setMessage(`❌ Ошибка: ${error.message}`)
+      setMessage(`❌ Ошибка: Проверьте подключение к серверу (${API_URL})`)
+      console.error('Refresh status error:', error)
     }
   }
 

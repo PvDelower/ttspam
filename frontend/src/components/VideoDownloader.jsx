@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 function VideoDownloader() {
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,7 +17,7 @@ function VideoDownloader() {
     setMessage('')
 
     try {
-      const response = await fetch('http://localhost:8000/api/download', {
+      const response = await fetch(`${API_URL}/api/download`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url })
@@ -29,7 +31,8 @@ function VideoDownloader() {
         setMessage(`❌ Ошибка: ${data.error || 'Неизвестная ошибка'}`)
       }
     } catch (error) {
-      setMessage(`❌ Ошибка соединения: ${error.message}`)
+      setMessage(`❌ Ошибка соединения: Проверьте подключение к серверу (${API_URL})`)
+      console.error('Download error:', error)
     } finally {
       setLoading(false)
     }
